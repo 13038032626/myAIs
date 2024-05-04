@@ -5,8 +5,10 @@ import com.example.myais.web.testController;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class PythonEngine {
+    static int kimiNum = 0;
 
     public static volatile Runtime runtime;
 
@@ -27,11 +29,15 @@ public class PythonEngine {
 
     public static void execPythonScript(Object[] content, AIModules modules) {
         try {
-            String[] args1 = new String[3 + content.length];
+//            System.out.println("content的长度： "+content.length);
+            String[] args1 = new String[4 + content.length];
             args1[0] = "C:\\Users\\吴松林\\PycharmProjects\\pythonProject\\.venv\\Scripts\\python.exe";
             args1[1] = modules.path;
-            args1[2] = String.valueOf(content.length);
-            System.arraycopy(content, 0, args1, 3, 3 + content.length - 3);
+            args1[2] = String.valueOf(kimiNum);
+//            System.out.println("kimiNum = " + kimiNum);
+            kimiNum += content.length;
+            args1[3] = String.valueOf(content.length);
+            System.arraycopy(content, 0, args1, 4, content.length);
             Runtime runtime = getRuntime();
             Process proc = runtime.exec(args1);
             InputStream is = proc.getInputStream();
@@ -45,6 +51,7 @@ public class PythonEngine {
                 ansOrigin = ansOrigin.substring(0, ansOrigin.length() - 1);
             }
             String[] ans = ansOrigin.split(",");
+//            System.out.println("ans = " + Arrays.toString(ans));
             proc.waitFor();
             for (int i = 0; i < content.length; i++) {
                 testController.result.put((String) content[i],ans[i]);

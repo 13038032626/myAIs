@@ -17,31 +17,35 @@ public class testController {
     public static long lastTimeKimi;
     public static final BlockingQueue<String> currentRequestByTongyi = new LinkedBlockingQueue<>();
     public static final BlockingQueue<String> currentRequestByGPT = new LinkedBlockingQueue<>();
-    public static final ConcurrentHashMap<String,String> result = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
 
     @GetMapping("/queryFromKimi")
     public String queryFromKimi(@RequestParam String content) throws InterruptedException {
-//        String ans = PythonEngine.execPythonScript(content, AIModules.KIMI);
+
         currentRequestByKimi.put(content);
-        result.put(content,"_");
+        result.put(content, "_");
         long time;
-        if((time = System.currentTimeMillis()) - lastTimeKimi > 5) {
-            synchronized (currentRequestByKimi) {
-                PythonEngine.execPythonScript(currentRequestByKimi.toArray(), AIModules.KIMI);
-                lastTimeKimi = time;
+        synchronized (currentRequestByKimi) {
+            if (lastTimeKimi - (lastTimeKimi = System.currentTimeMillis()) < -1000) {
+                Object[] execRequests = currentRequestByKimi.toArray();
+                if (execRequests.length != 0) {
+                    PythonEngine.execPythonScript(execRequests, AIModules.KIMI);
+                    for (int i = 0; i < execRequests.length; i++) {
+                        currentRequestByKimi.poll();
+                    }
+                }
             }
         }
         while (result.get(content).equals("_")) {
 
         }
-        String ans = result.get(content);
-        System.out.println("kimi-ans" + ans);
-        return ans;
+        return result.get(content);
     }
+
     @GetMapping("/queryFromTongyi")
     public String queryFromTongyi(@RequestParam String content) throws InterruptedException {
         currentRequestByTongyi.put(content);
-        result.put(content,"_");
+        result.put(content, "_");
         while (result.get(content).equals("_")) {
 
         }
@@ -49,10 +53,11 @@ public class testController {
         System.out.println("tongyi-ans" + ans);
         return ans;
     }
+
     @GetMapping("/queryFromGPT")
     public String queryFromGPT(@RequestParam String content) throws InterruptedException {
         currentRequestByGPT.put(content);
-        result.put(content,"_");
+        result.put(content, "_");
         while (result.get(content).equals("_")) {
 
         }

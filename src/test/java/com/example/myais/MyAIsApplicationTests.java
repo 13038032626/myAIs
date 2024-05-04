@@ -8,6 +8,7 @@ class MyAIsApplicationTests {
 
     @Test
     void contextLoads() {
+        System.out.println("\"123\".split(\",\").length = " + "123".split(",").length);
     }
 
 }
